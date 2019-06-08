@@ -16,12 +16,13 @@ import numpy as np
 
 camera_pos_file = open('metadata', 'r')
 
-for i in range(8):
+for i in range(1):
 	phi, theta, zero, r, field = [x for x in camera_pos_file.readline().split(' ')] # read first line
 
 r = float(r)
 theta = float(theta)
 phi = float(phi)
+# # inclidation is theta azimuth is phi
 print("phi->", phi, " theta->", theta, " r->", r)
 
  
@@ -49,7 +50,6 @@ CAM_ROT = np.matrix(((1.910685676922942e-15, 4.371138828673793e-08, 1.0),
 
 #the original version of this function from occupancy was quite poorly written, though the logic was sound
 # see this paper  http://www.cs.uns.edu.ar/cg/clasespdf/p465carlbom.pdf
-
 #we had to change the variable names using the more intuitive and accurate explanation from this video
 #https://www.youtube.com/watch?v=iMZdNIWygHw&list=LLXUyxYccmOdGdbyxiGTtOSQ&index=7
 def getkrt(az, el, distance_ratio, img_w=IMG_W, img_h=IMG_H):
@@ -102,23 +102,22 @@ y_img = []
 
 
 check = 0
+#loop runs through each of the points of point cloud A and translates and rotates it to its new position in point cloud B
 while ( 1 ):
+
+	#a little loop to skip the medata in the first 11 lines and directly translate them over
 	if(check == 0):
 		for i in range(11):
 			ln = source_pcd.readline() 
 			rotated_pcd.write(ln)
 		check = 1
 
+	#now actually take each line, which is an individual point, and calculate its new location in the new point cloud
 	ln = source_pcd.readline().split(' ')
 	if (len(ln) < 3):
 		break
 	ax, ay, az = [x for x in ln] # read first line
 	ax, ay, az = float(ax), float(ay), float(az)
-
-
-	# print(ax, ay, az) #one point, x, y, z before any operations
-
-
 	x_input.append(ax)
 	y_input.append(ay)
 	z_input.append(az)
@@ -126,16 +125,15 @@ while ( 1 ):
 
 	A = np.asarray([[ax], [ay], [az], [1]])
 
- 
-
+	#calulate point B from point A by multiplyin by K and RT
 	B = np.dot(  K, (np.dot(RT, A )) )
 
-	# print(B)
-
+	#the rotated and traslated version of each given point A
 	bx = float(B[0])
 	by = float(B[1])
 	bz = float(B[2])
 
+	#add the coordinates to the lists, to be later added to point clouds
 	x_rotated.append(bx)
 	y_rotated.append(by)
 	z_rotated.append(bz)
@@ -146,11 +144,11 @@ while ( 1 ):
 	rotated_pcd.write( str(bx) + ' ' + str(by) + ' ' + str(bz) + '\n' ) 
 
 
-# # inclidation is theta azimuth is phi
+#convert this lists to a form numpy can understand
+
 x_input = np.asarray(x_input)
 y_input = np.asarray(y_input)
 z_input = np.asarray(z_input)
-
 x_rotated = np.asarray(x_rotated)
 y_rotated = np.asarray(y_rotated)
 z_rotated = np.asarray(z_rotated)
