@@ -2,9 +2,8 @@
 #https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
 #https://en.wikipedia.org/wiki/3D_projection (see perspective projection)
 
-
-#NOTE: they did indeed give the camera rotation as a matrix so if 
-#this doesn't work try to do it again
+#the point clouds are written to output file rotate.pcd, so simply view this to see that the point
+#cloud is indeed being rotated 
  
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -90,12 +89,14 @@ K, RT = getkrt(phi, theta, r)
 
 #declare some arrays that can be used to visualise the point cloud from pyplot 
 #also make use of lidar view to visualise the final point cloud 
-x_input = []
-y_input = []
-z_input = []
-x_rotated = []
-y_rotated = []
-z_rotated = []
+
+
+# x_input = []
+# y_input = []
+# z_input = []
+# x_rotated = []
+# y_rotated = []
+# z_rotated = []
 
 x_img = []
 y_img = []
@@ -118,9 +119,9 @@ while ( 1 ):
 		break
 	ax, ay, az = [x for x in ln] # read first line
 	ax, ay, az = float(ax), float(ay), float(az)
-	x_input.append(ax)
-	y_input.append(ay)
-	z_input.append(az)
+	# x_input.append(ax)
+	# y_input.append(ay)
+	# z_input.append(az)
 
 
 	A = np.asarray([[ax], [ay], [az], [1]])
@@ -134,30 +135,43 @@ while ( 1 ):
 	bz = float(B[2])
 
 	#add the coordinates to the lists, to be later added to point clouds
-	x_rotated.append(bx)
-	y_rotated.append(by)
-	z_rotated.append(bz)
+	# x_rotated.append(bx)
+	# y_rotated.append(by)
+	# z_rotated.append(bz)
 
 	#write the line of points to the final pointcloud
 	#note that mutliplying by k and rt actually gives a 
-	# 3d projection and you just need to use the thing jia found to finally get the 2d one
+	# 3d projection and you just need to use the formula jia found to get 
+	#the perspective projection on the image plane
+	#see https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+	#and  https://en.wikipedia.org/wiki/3D_projection#Weak_perspective_projection
 	rotated_pcd.write( str(bx) + ' ' + str(by) + ' ' + str(bz) + '\n' ) 
 
+	#having written to the rotated point cloud, we can now write to the perspective projection on image plane
+	#from here on is still experimental- it appears that the generated 
+	#plot is an upside down (in z , not y) version of the corresponding image
+	x_img.append(-bx)
+	y_img.append(-by)
 
-#convert this lists to a form numpy can understand
-
-x_input = np.asarray(x_input)
-y_input = np.asarray(y_input)
-z_input = np.asarray(z_input)
-x_rotated = np.asarray(x_rotated)
-y_rotated = np.asarray(y_rotated)
-z_rotated = np.asarray(z_rotated)
+#convert the lists to arrays and visualise with pyplot
+x_img = np.asarray(x_img)
+y_img = np.asarray(y_img)
+plt.scatter(x_img, y_img)
+plt.show()
 
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(x_input, y_input, z_input, zdir='z', c='red')
-ax.scatter(x_rotated, y_rotated, z_rotated, zdir='z', c='blue')
+# x_input = np.asarray(x_input)
+# y_input = np.asarray(y_input)
+# z_input = np.asarray(z_input)
+# x_rotated = np.asarray(x_rotated)
+# y_rotated = np.asarray(y_rotated)
+# z_rotated = np.asarray(z_rotated)
 
-plt.savefig("demo.png")
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# ax.scatter(x_input, y_input, z_input, zdir='z', c='red')
+# ax.scatter(x_rotated, y_rotated, z_rotated, zdir='z', c='blue')
+
+# plt.savefig("demo.png")
 
