@@ -1,0 +1,3 @@
+/home/munachiso/summer/PCL_TO_IMG/build/CMakeFiles/edit_cache.dir
+/home/munachiso/summer/PCL_TO_IMG/build/CMakeFiles/vis.dir
+/home/munachiso/summer/PCL_TO_IMG/build/CMakeFiles/rebuild_cache.dir
