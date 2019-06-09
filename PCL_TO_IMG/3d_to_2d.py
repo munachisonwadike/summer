@@ -14,19 +14,24 @@ import numpy as np
 
 
 camera_pos_file = open('metadata', 'r')
+p = 3
+count = -1
 
-for i in range(1):
+
+
+for i in range(p+1): #this will open up the parameters for the p'th image
 	phi, theta, zero, r, field = [x for x in camera_pos_file.readline().split(' ')] # read first line
+	count+=1
 
 r = float(r)
 theta = float(theta)
 phi = float(phi)
 # # inclidation is theta azimuth is phi
-print("phi->", phi, " theta->", theta, " r->", r)
+print("count->", count, "phi->", phi, " theta->", theta, " r->", r)
 
  
 source_pcd = open('model_normalized.pcd', 'r')
-rotated_pcd = open('rotated.pcd', 'w')
+rotated_pcd = open("rotated" + str(count) + ".pcd", 'w')
 image_snapshot = open('multiview_image.pcd', 'w')
 
 
@@ -75,12 +80,15 @@ def getkrt(az, el, distance_ratio, img_w=IMG_W, img_h=IMG_H):
     # Step 2: Object coordinate to camera coordinate.
     R_cam2screen = np.transpose(CAM_ROT)
     R_world2screen = R_cam2screen * R_world2cam
+
     cam_location = np.transpose(np.matrix((distance_ratio * CAM_MAX_DIST,
                                            0,
                                            0)))
     T_cam2screen = -1 * R_cam2screen * cam_location
 
-    RT = np.hstack((R_cam2screen, T_cam2screen))
+    RT = np.hstack((R_world2screen, T_cam2screen))
+
+    # RT = np.hstack((R_cam2screen, np.asarray ([ [0],[0],[0] ]) ))
 
     return K, RT
 
@@ -91,12 +99,12 @@ K, RT = getkrt(phi, theta, r)
 #also make use of lidar view to visualise the final point cloud 
 
 
-# x_input = []
-# y_input = []
-# z_input = []
-# x_rotated = []
-# y_rotated = []
-# z_rotated = []
+x_input = []
+y_input = []
+z_input = []
+x_rotated = []
+y_rotated = []
+z_rotated = []
 
 x_img = []
 y_img = []
@@ -119,9 +127,9 @@ while ( 1 ):
 		break
 	ax, ay, az = [x for x in ln] # read first line
 	ax, ay, az = float(ax), float(ay), float(az)
-	# x_input.append(ax)
-	# y_input.append(ay)
-	# z_input.append(az)
+	x_input.append(ax)
+	y_input.append(ay)
+	z_input.append(az)
 
 
 	A = np.asarray([[ax], [ay], [az], [1]])
@@ -135,9 +143,9 @@ while ( 1 ):
 	bz = float(B[2])
 
 	#add the coordinates to the lists, to be later added to point clouds
-	# x_rotated.append(bx)
-	# y_rotated.append(by)
-	# z_rotated.append(bz)
+	x_rotated.append(bx)
+	y_rotated.append(by)
+	z_rotated.append(bz)
 
 	#write the line of points to the final pointcloud
 	#note that mutliplying by k and rt actually gives a 
@@ -150,28 +158,29 @@ while ( 1 ):
 	#having written to the rotated point cloud, we can now write to the perspective projection on image plane
 	#from here on is still experimental- it appears that the generated 
 	#plot is an upside down (in z , not y) version of the corresponding image
-	x_img.append(-bx)
-	y_img.append(-by)
+	x_img.append(bx/bz)
+	y_img.append(by/bz)
+	# print("bz =", bz)
 
-#convert the lists to arrays and visualise with pyplot
+# convert the lists to arrays and visualise with pyplot
 x_img = np.asarray(x_img)
 y_img = np.asarray(y_img)
 plt.scatter(x_img, y_img)
 plt.show()
 
 
-# x_input = np.asarray(x_input)
-# y_input = np.asarray(y_input)
-# z_input = np.asarray(z_input)
-# x_rotated = np.asarray(x_rotated)
-# y_rotated = np.asarray(y_rotated)
-# z_rotated = np.asarray(z_rotated)
+x_input = np.asarray(x_input)
+y_input = np.asarray(y_input)
+z_input = np.asarray(z_input)
+x_rotated = np.asarray(x_rotated)
+y_rotated = np.asarray(y_rotated)
+z_rotated = np.asarray(z_rotated)
 
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(x_input, y_input, z_input, zdir='z', c='red')
-# ax.scatter(x_rotated, y_rotated, z_rotated, zdir='z', c='blue')
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(x_input, y_input, z_input, c='red')
+ax.scatter(x_rotated, y_rotated, z_rotated, c='blue')
 
-# plt.savefig("demo.png")
+plt.savefig("demo"+str(count)+".png")
 
