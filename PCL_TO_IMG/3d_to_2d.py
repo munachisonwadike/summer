@@ -4,22 +4,24 @@
 
 #the point clouds are written to output file rotate.pcd, so simply view this to see that the point
 #cloud is indeed being rotated 
- 
+
+
 from mpl_toolkits.mplot3d import Axes3D
 
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
-
-
+ 
+num = int(sys.argv[1])
 camera_pos_file = open('metadata', 'r')
-p = 3
+print(num)
 count = -1
 
 
 
-for i in range(p+1): #this will open up the parameters for the p'th image
+for i in range(num+1): #this will open up the parameters for the p'th image
 	phi, theta, zero, r, field = [x for x in camera_pos_file.readline().split(' ')] # read first line
 	count+=1
 
@@ -148,24 +150,21 @@ while ( 1 ):
 	z_rotated.append(bz)
 
 	#write the line of points to the final pointcloud
-	#note that mutliplying by k and rt actually gives a 
-	# 3d projection and you just need to use the formula jia found to get 
-	#the perspective projection on the image plane
-	#see https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
-	#and  https://en.wikipedia.org/wiki/3D_projection#Weak_perspective_projection
 	rotated_pcd.write( str(bx) + ' ' + str(by) + ' ' + str(bz) + '\n' ) 
 
-	#having written to the rotated point cloud, we can now write to the perspective projection on image plane
-	#from here on is still experimental- it appears that the generated 
-	#plot is an upside down (in z , not y) version of the corresponding image
-	x_img.append(bx/bz)
-	y_img.append(by/bz)
+	#note that mutliplying by k and rt actually gives a 
+	#3d projection and you just need to use the formula for 
+	#perspective projection on the image plane
+	#see https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+	#and  https://en.wikipedia.org/wiki/3D_projection#Weak_perspective_projection 
+	x_img.append(bx)
+	y_img.append(by)
 	# print("bz =", bz)
 
 # convert the lists to arrays and visualise with pyplot
 x_img = np.asarray(x_img)
 y_img = np.asarray(y_img)
-plt.scatter(x_img, y_img)
+plt.scatter(x_img, y_img, s=0.2)
 plt.show()
 
 
